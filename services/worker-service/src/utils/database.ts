@@ -14,7 +14,7 @@ class Database {
         connectionTimeoutMillis: 2000,
       });
 
-      this.pool.on('error', (err) => {
+      this.pool.on('error', (err: Error) => {
         logger.error('Unexpected database error', { error: err.message });
       });
 

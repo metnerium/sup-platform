@@ -19,7 +19,6 @@ import { Readable } from 'stream';
 import { imageService } from './image.service';
 import { videoService } from './video.service';
 import { audioService } from './audio.service';
-import { fileTypeService } from './fileType.service';
 import { fileConfig } from '../config/s3.config';
 import { processingConfig } from '../config/processing.config';
 

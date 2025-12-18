@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # ========== APPLICATION SERVICES ==========
 
@@ -7,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: services/main-api/Dockerfile
-      args:
-        WORKSPACE: services/main-api
     container_name: sup-main-api
     restart: unless-stopped
     ports:
@@ -16,14 +12,8 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${DATABASE_NAME:-sup}
-      DATABASE_USER: ${DATABASE_USER:-sup_user}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      DATABASE_URL: postgresql://${DATABASE_USER:-sup_user}:${DATABASE_PASSWORD}@postgres:5432/${DATABASE_NAME:-sup}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-15m}
       JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-30d}
@@ -31,8 +21,8 @@ services:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_BUCKET: ${S3_BUCKET:-sup-media}
+      S3_FORCE_PATH_STYLE: "true"
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
-      KAFKA_BROKERS: kafka:9092
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,8 +47,6 @@ services:
     build:
       context: .
       dockerfile: services/websocket-service/Dockerfile
-      args:
-        WORKSPACE: services/websocket-service
     container_name: sup-websocket
     restart: unless-stopped
     ports:
@@ -66,9 +54,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       redis:
@@ -87,8 +73,6 @@ services:
     build:
       context: .
       dockerfile: services/media-service/Dockerfile
-      args:
-        WORKSPACE: services/media-service
     container_name: sup-media
     restart: unless-stopped
     ports:
@@ -101,6 +85,7 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_BUCKET: ${S3_BUCKET:-sup-media}
       S3_REGION: ${S3_REGION:-us-east-1}
+      S3_FORCE_PATH_STYLE: "true"
       JWT_SECRET: ${JWT_SECRET}
       MAX_FILE_SIZE: ${MAX_FILE_SIZE:-104857600}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
@@ -112,7 +97,7 @@ services:
     networks:
       - sup-network
     volumes:
-      - ./services/media-service/logs:/app/logs
+      - ./services/media-service/logs:/app/services/media-service/logs
       - media_temp:/app/temp
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
@@ -124,8 +109,6 @@ services:
     build:
       context: .
       dockerfile: services/call-service/Dockerfile
-      args:
-        WORKSPACE: services/call-service
     container_name: sup-call
     restart: unless-stopped
     ports:
@@ -133,14 +116,8 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3004
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${DATABASE_NAME:-sup}
-      DATABASE_USER: ${DATABASE_USER:-sup_user}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      DATABASE_URL: postgresql://${DATABASE_USER:-sup_user}:${DATABASE_PASSWORD}@postgres:5432/${DATABASE_NAME:-sup}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       JWT_SECRET: ${JWT_SECRET}
       LIVEKIT_URL: ws://livekit:7880
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
@@ -170,25 +147,18 @@ services:
     build:
       context: .
       dockerfile: services/worker-service/Dockerfile
-      args:
-        WORKSPACE: services/worker-service
     container_name: sup-worker
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${DATABASE_NAME:-sup}
-      DATABASE_USER: ${DATABASE_USER:-sup_user}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      DATABASE_URL: postgresql://${DATABASE_USER:-sup_user}:${DATABASE_PASSWORD}@postgres:5432/${DATABASE_NAME:-sup}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_BUCKET: ${S3_BUCKET:-sup-media}
+      S3_FORCE_PATH_STYLE: "true"
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
@@ -270,35 +240,6 @@ services:
       timeout: 10s
       retries: 3
 
-  kafka:
-    image: bitnami/kafka:3.6
-    container_name: sup-kafka
-    restart: unless-stopped
-    ports:
-      - "9092:9092"
-      - "9094:9094"
-    environment:
-      # KRaft mode (without Zookeeper)
-      KAFKA_CFG_NODE_ID: 0
-      KAFKA_CFG_PROCESS_ROLES: controller,broker
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_CFG_LOG_RETENTION_HOURS: 168
-      KAFKA_CFG_LOG_SEGMENT_BYTES: 1073741824
-    volumes:
-      - kafka_data:/bitnami/kafka
-    networks:
-      - sup-network
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   minio:
     image: minio/minio:latest
     container_name: sup-minio
@@ -347,7 +288,7 @@ services:
       - "7881:7881"   # HTTP
       - "7882:7882/udp" # RTP
     environment:
-      LIVEKIT_KEYS: ${LIVEKIT_API_KEY}:${LIVEKIT_API_SECRET}
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
     volumes:
       - ./config/livekit.yaml:/etc/livekit.yaml
     command: --config /etc/livekit.yaml
@@ -454,12 +395,14 @@ services:
       - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./certbot/conf:/etc/letsencrypt:ro
       - ./certbot/www:/var/www/certbot:ro
+      - ./clients/web/dist:/var/www/sup:ro
     networks:
       - sup-network
     depends_on:
       - main-api
       - websocket-service
       - media-service
+      - call-service
 
   certbot:
     image: certbot/certbot
@@ -474,9 +417,6 @@ services:
 networks:
   sup-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
 
 volumes:
   postgres_data:
@@ -484,8 +424,6 @@ volumes:
   redis_data:
     driver: local
   rabbitmq_data:
-    driver: local
-  kafka_data:
     driver: local
   minio_data:
     driver: local

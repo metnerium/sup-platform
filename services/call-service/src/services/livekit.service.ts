@@ -2,13 +2,12 @@ import {
   AccessToken,
   RoomServiceClient,
   Room,
-  Participant,
-  TrackSource,
-  VideoQuality,
+  ParticipantInfo,
+  DataPacket_Kind,
 } from 'livekit-server-sdk';
 import { config } from '../config';
 import { logger } from '../utils/logger';
-import { CallType, LiveKitToken } from '@sup/types';
+import { LiveKitToken } from '@sup/types';
 
 export class LiveKitService {
   private roomService: RoomServiceClient;
@@ -125,7 +124,7 @@ export class LiveKitService {
   /**
    * List participants in a room
    */
-  async listParticipants(roomName: string): Promise<Participant[]> {
+  async listParticipants(roomName: string): Promise<ParticipantInfo[]> {
     try {
       const participants = await this.roomService.listParticipants(roomName);
       return participants;
@@ -161,27 +160,27 @@ export class LiveKitService {
   async muteParticipantTrack(
     roomName: string,
     participantIdentity: string,
-    trackSource: TrackSource,
+    trackSid: string,
     muted: boolean
   ): Promise<void> {
     try {
       await this.roomService.mutePublishedTrack(
         roomName,
         participantIdentity,
-        trackSource,
+        trackSid,
         muted
       );
       logger.info('Participant track muted/unmuted', {
         roomName,
         participantIdentity,
-        trackSource,
+        trackSid,
         muted,
       });
     } catch (error) {
       logger.error('Failed to mute/unmute track', {
         roomName,
         participantIdentity,
-        trackSource,
+        trackSid,
         error,
       });
       throw error;
@@ -223,9 +222,12 @@ export class LiveKitService {
     destinationIdentities?: string[]
   ): Promise<void> {
     try {
-      await this.roomService.sendData(roomName, data, {
-        destinationIdentities,
-      });
+      await this.roomService.sendData(
+        roomName,
+        data,
+        DataPacket_Kind.RELIABLE,
+        { destinationSids: destinationIdentities }
+      );
       logger.debug('Data sent to room', { roomName });
     } catch (error) {
       logger.error('Failed to send data', { roomName, error });

@@ -7,7 +7,7 @@ const router = Router();
 // Metrics endpoint (Prometheus format could be added)
 router.get(
   '/metrics',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (_req: Request, res: Response) => {
     const metrics = await monitoringService.getMetrics();
     res.json(metrics);
   })
@@ -16,7 +16,7 @@ router.get(
 // Health check endpoint
 router.get(
   '/health',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (_req: Request, res: Response) => {
     const health = await monitoringService.getHealth();
     const statusCode = health.status === 'healthy' ? 200 : 503;
     res.status(statusCode).json(health);

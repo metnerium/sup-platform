@@ -7,7 +7,6 @@ import { config } from '../config';
 import {
   Call,
   CallParticipant,
-  CallType,
   CallState,
   CallEndReason,
   ParticipantRole,
@@ -15,8 +14,6 @@ import {
   StartCallResponse,
   JoinCallResponse,
   ICEServer,
-  CallInvitation,
-  LiveKitToken,
 } from '@sup/types';
 
 export class CallService {
@@ -468,8 +465,7 @@ export class CallService {
     try {
       // This would be called periodically by a worker
       // Find calls that have been in ringing/connecting state too long
-      const staleTimeout = config.calls.ringingTimeout * 1000; // Convert to ms
-
+      // TODO: Implement full cleanup using config.calls.ringingTimeout
       logger.info('Cleanup stale calls executed');
     } catch (error) {
       logger.error('Failed to cleanup stale calls', { error });

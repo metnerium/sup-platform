@@ -39,7 +39,7 @@ export function createApp(): Express {
   }
 
   // Health check
-  app.get('/health', (req: Request, res: Response) => {
+  app.get('/health', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
       service: 'call-service',

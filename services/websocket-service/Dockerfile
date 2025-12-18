@@ -16,6 +16,9 @@ COPY services/websocket-service/tsconfig.json ./services/websocket-service/
 # Install dependencies for workspace
 RUN npm ci
 
+# Build shared types package first
+RUN npm run build --workspace=@sup/types
+
 # Copy service source code
 COPY services/websocket-service/src ./services/websocket-service/src
 
@@ -28,12 +31,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY services/websocket-service/package*.json ./
+# Copy package files and built packages
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/services/websocket-service/package*.json ./services/websocket-service/
 
-# Install production dependencies only
-RUN npm ci --only=production && \
-    npm cache clean --force
+# Copy node_modules from builder (includes workspace dependencies)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built application from builder
 COPY --from=builder /app/services/websocket-service/dist ./dist

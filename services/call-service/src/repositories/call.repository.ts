@@ -3,15 +3,11 @@ import { logger } from '../utils/logger';
 import {
   Call,
   CallParticipant,
-  CallRecording,
   CallType,
   CallState,
   CallEndReason,
   ParticipantRole,
-  CallQualityMetrics,
-  ConnectionQuality,
 } from '@sup/types';
-import { v4 as uuidv4 } from 'uuid';
 
 export class CallRepository {
   /**

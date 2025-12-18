@@ -2,17 +2,28 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy root package files
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
+# Copy shared packages
+COPY packages ./packages
+
+# Copy service package files
+COPY services/main-api/package*.json ./services/main-api/
+COPY services/main-api/tsconfig.json ./services/main-api/
+
+# Install dependencies for workspace
 RUN npm ci
 
-# Copy source code
-COPY src ./src
+# Build shared types package first
+RUN npm run build --workspace=@sup/types
+
+# Copy service source code
+COPY services/main-api/src ./services/main-api/src
 
 # Build TypeScript
+WORKDIR /app/services/main-api
 RUN npm run build
 
 # Production image
@@ -20,15 +31,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files and built packages
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/services/main-api/package*.json ./services/main-api/
 
-# Install production dependencies only
-RUN npm ci --only=production && \
-    npm cache clean --force
+# Copy node_modules from builder (includes workspace dependencies)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built application from builder
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/services/main-api/dist ./dist
 
 # Create logs directory
 RUN mkdir -p logs && chmod 777 logs

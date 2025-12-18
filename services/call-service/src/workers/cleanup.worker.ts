@@ -1,5 +1,4 @@
 import { logger } from '../utils/logger';
-import { callRepository } from '../repositories/call.repository';
 import { livekitService } from '../services/livekit.service';
 import { db } from '../config/database';
 import { config } from '../config';
@@ -154,13 +153,14 @@ export class CleanupWorker {
         CallState.RECONNECTING,
       ]);
 
-      const activeRoomIds = new Set(activeCalls.map((c) => c.room_id));
+      const _activeRoomIds = new Set(activeCalls.map((c) => c.room_id));
 
       // Note: We can't easily get all room names from LiveKit without iterating
-      // This is a placeholder for more sophisticated cleanup
+      // This is a placeholder for more sophisticated cleanup (TODO: implement full cleanup)
       logger.debug('Checked for orphaned rooms', {
         livekitRooms,
         databaseCalls: activeCalls.length,
+        activeRoomIdsCount: _activeRoomIds.size,
       });
     } catch (error) {
       logger.error('Failed to cleanup orphaned rooms:', error);

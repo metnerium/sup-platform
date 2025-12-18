@@ -5,11 +5,11 @@ import { websocketService } from '../services/websocket.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import { logger } from '../utils/logger';
 import {
-  StartCallRequest,
   CallEvent,
   CallEndReason,
   CallInvitation,
   CallType,
+  StartCallRequest,
 } from '@sup/types';
 import { z } from 'zod';
 
@@ -62,7 +62,11 @@ export const CallController = {
     logger.info('Starting call', { userId, data: validatedData });
 
     // Start call
-    const result = await callService.startCall(userId, validatedData);
+    const startRequest: StartCallRequest = {
+      ...validatedData,
+      type: validatedData.type as CallType,
+    };
+    const result = await callService.startCall(userId, startRequest);
 
     // Get initiator info for invitation
     const initiatorName = req.user!.username;
@@ -102,7 +106,7 @@ export const CallController = {
     const { callId } = req.params;
 
     // Validate request
-    const validatedData = joinCallSchema.parse(req.body);
+    joinCallSchema.parse(req.body);
 
     logger.info('Joining call', { userId, callId });
 
@@ -309,7 +313,7 @@ export const CallController = {
    * Get call statistics (admin/monitoring)
    * GET /calls/stats
    */
-  getStats: asyncHandler(async (req: AuthRequest, res: Response) => {
+  getStats: asyncHandler(async (_req: AuthRequest, res: Response) => {
     logger.info('Getting call statistics');
 
     const stats = await callService.getCallStats();

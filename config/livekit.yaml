@@ -6,43 +6,16 @@ rtc:
   port_range_start: 50000
   port_range_end: 60000
   use_external_ip: false
+  tcp_port: 7881
 
-# TURN/STUN configuration
 turn:
-  enabled: true
-  domain: ""
-  tls_port: 5349
-  udp_port: 3478
-  external_tls: false
+  enabled: false
 
-# Keys для аутентификации (заменить в production)
-keys:
-  API_KEY: SECRET_KEY
-
-# Логирование
 logging:
   level: info
   sample: false
 
-# Room configuration
 room:
   auto_create: true
   empty_timeout: 300
   max_participants: 50
-
-# WebRTC configuration
-webrtc:
-  ice_servers:
-    - urls:
-        - "stun:coturn:3478"
-      username: ""
-      credential: ""
-
-# Audio/Video settings
-audio:
-  enabled: true
-  codec: opus
-
-video:
-  enabled: true
-  codec: h264

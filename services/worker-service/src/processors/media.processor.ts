@@ -16,7 +16,7 @@ import { metricsCollector } from '../monitoring/metrics';
 
 // Configure ffmpeg paths
 ffmpeg.setFfmpegPath(ffmpegStatic as string);
-ffmpeg.setFfprobePath(ffprobeStatic.path);
+ffmpeg.setFfprobePath(ffprobeStatic);
 
 interface ProcessedMedia {
   originalUrl: string;
@@ -97,7 +97,6 @@ async function processImage(job: Queue.Job<MediaJob>): Promise<ProcessedMedia> {
 
     // Get original metadata
     const metadata = await sharp(imageBuffer).metadata();
-    const originalSize = imageBuffer.length;
 
     job.progress(20);
 

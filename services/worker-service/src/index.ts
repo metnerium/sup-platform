@@ -126,7 +126,7 @@ function startMonitoringServer(): void {
   app.use(express.json());
 
   // Health check endpoint
-  app.get('/health', async (req, res) => {
+  app.get('/health', async (_req, res) => {
     try {
       await database.query('SELECT 1');
       res.json({
@@ -143,7 +143,7 @@ function startMonitoringServer(): void {
   });
 
   // Queue metrics endpoint
-  app.get('/metrics/queues', async (req, res) => {
+  app.get('/metrics/queues', async (_req, res) => {
     try {
       const metrics = await getQueueMetrics();
       res.json(metrics);
@@ -155,7 +155,7 @@ function startMonitoringServer(): void {
   });
 
   // System metrics endpoint
-  app.get('/metrics/system', (req, res) => {
+  app.get('/metrics/system', (_req, res) => {
     try {
       const metrics = getSystemMetrics();
       res.json(metrics);
@@ -167,7 +167,7 @@ function startMonitoringServer(): void {
   });
 
   // Graceful shutdown endpoint
-  app.post('/shutdown', async (req, res) => {
+  app.post('/shutdown', async (_req, res) => {
     res.json({ message: 'Shutting down...' });
     await gracefulShutdown();
   });

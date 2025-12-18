@@ -1,5 +1,4 @@
 import logger from '../utils/logger';
-import { config } from '../config';
 
 interface SMSOptions {
   to: string;
@@ -14,12 +13,16 @@ class SMSService {
   private initialized = false;
   private apiKey: string;
   private apiSecret: string;
-  private from: string;
+  private senderNumber: string;
 
   constructor() {
     this.apiKey = process.env.SMS_API_KEY || '';
     this.apiSecret = process.env.SMS_API_SECRET || '';
-    this.from = process.env.SMS_FROM_NUMBER || '';
+    this.senderNumber = process.env.SMS_FROM_NUMBER || '';
+  }
+
+  getSenderNumber(): string {
+    return this.senderNumber;
   }
 
   initialize(): void {

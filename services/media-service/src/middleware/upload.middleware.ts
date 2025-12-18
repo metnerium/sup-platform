@@ -7,7 +7,7 @@ import { logger } from '../config/logger.config';
 const storage = multer.memoryStorage();
 
 const fileFilter = (
-  req: Request,
+  _req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ): void => {
@@ -49,8 +49,8 @@ export const uploadMultipleMiddleware = multer({
 
 export const handleMulterError = (
   err: any,
-  req: Request,
-  res: any,
+  _req: Request,
+  _res: any,
   next: any
 ): void => {
   if (err instanceof multer.MulterError) {

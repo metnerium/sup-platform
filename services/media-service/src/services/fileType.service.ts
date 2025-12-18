@@ -1,4 +1,4 @@
-import { fileTypeFromBuffer } from 'file-type';
+import fileType from 'file-type';
 import { logger } from '../config/logger.config';
 
 export interface FileTypeInfo {
@@ -10,18 +10,18 @@ export interface FileTypeInfo {
 export class FileTypeService {
   async detectFileType(buffer: Buffer): Promise<FileTypeInfo | null> {
     try {
-      const fileType = await fileTypeFromBuffer(buffer);
+      const detectedType = await fileType.fromBuffer(buffer);
 
-      if (!fileType) {
+      if (!detectedType) {
         logger.warn('Could not detect file type from buffer');
         return null;
       }
 
-      const category = this.categorizeFileType(fileType.mime);
+      const category = this.categorizeFileType(detectedType.mime);
 
       return {
-        ext: fileType.ext,
-        mime: fileType.mime,
+        ext: detectedType.ext,
+        mime: detectedType.mime,
         category,
       };
     } catch (error) {

@@ -1,13 +1,13 @@
-import amqp, { Channel, Connection, ConsumeMessage } from 'amqplib';
+import amqp, { Channel, ChannelModel, ConsumeMessage } from 'amqplib';
 import { config } from '../config';
 import logger from '../utils/logger';
 
 type MessageHandler = (message: any) => Promise<void>;
 
 class RabbitMQService {
-  private connection: Connection | null = null;
+  private connection: ChannelModel | null = null;
   private channel: Channel | null = null;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
   async connect(): Promise<void> {
     try {
@@ -19,7 +19,7 @@ class RabbitMQService {
       });
 
       // Setup error handlers
-      this.connection.on('error', (err) => {
+      this.connection.on('error', (err: Error) => {
         logger.error('RabbitMQ connection error', { error: err.message });
         this.reconnect();
       });

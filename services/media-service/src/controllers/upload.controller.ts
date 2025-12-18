@@ -35,7 +35,7 @@ export class UploadController {
       }
 
       // Validate file
-      const validation = validateFile(file);
+      const validation = await validateFile(file);
       if (!validation.valid) {
         throw new ValidationError(validation.error || 'File validation failed');
       }
@@ -109,7 +109,7 @@ export class UploadController {
 
       const uploadPromises = files.map(async (file) => {
         // Validate file
-        const validation = validateFile(file);
+        const validation = await validateFile(file);
         if (!validation.valid) {
           throw new ValidationError(validation.error || 'File validation failed');
         }

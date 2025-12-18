@@ -8,9 +8,7 @@ import { logger } from '../utils/logger';
 import { callService } from './call.service';
 import {
   CallEvent,
-  CallEventPayload,
   CallInvitation,
-  CallState,
   CallEndReason,
 } from '@sup/types';
 

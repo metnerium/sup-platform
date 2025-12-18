@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@/modules/*": ["modules/*"],
+      "@/common/*": ["common/*"],
+      "@/config/*": ["config/*"],
+      "@sup/types": ["../../packages/types/src/index.ts"],
+      "@sup/types/*": ["../../packages/types/src/*"],
+      "@sup/utils": ["../../packages/utils/src/index.ts"],
+      "@sup/utils/*": ["../../packages/utils/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

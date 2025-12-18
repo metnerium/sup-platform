@@ -1,0 +1,43 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'sup-messenger'
+    environment: 'development'
+
+# Rule files for alerts
+rule_files:
+  - "/etc/prometheus/alerts/*.yml"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Main API metrics
+  - job_name: 'main-api'
+    static_configs:
+      - targets: ['main-api:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # WebSocket service metrics
+  - job_name: 'websocket-service'
+    static_configs:
+      - targets: ['websocket-service:3001']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Media service metrics
+  - job_name: 'media-service'
+    static_configs:
+      - targets: ['media-service:3003']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # LiveKit metrics
+  - job_name: 'livekit'
+    static_configs:
+      - targets: ['livekit:7881']
+    metrics_path: '/metrics'

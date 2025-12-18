@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  worker-service:
+    build: .
+    container_name: sup-worker-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # RabbitMQ
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      # PostgreSQL
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sup_messenger
+      # AWS S3
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-sup-messenger-media}
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+    volumes:
+      - ./logs:/app/logs
+      - /tmp:/tmp
+    networks:
+      - sup-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: sup-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - sup-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: sup-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - sup-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: sup-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sup_messenger
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - sup-network
+
+volumes:
+  redis-data:
+  rabbitmq-data:
+  postgres-data:
+
+networks:
+  sup-network:
+    driver: bridge

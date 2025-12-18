@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  websocket:
+    build:
+      context: ../..
+      dockerfile: services/websocket-service/Dockerfile
+    container_name: sup-websocket
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+      - "9091:9091"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SOCKETIO_PING_TIMEOUT: 60000
+      SOCKETIO_PING_INTERVAL: 25000
+      MAX_IDLE_TIME: 1800000
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sup-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:9091/health', (r) => { let d=''; r.on('data', c => d+=c); r.on('end', () => { const j=JSON.parse(d); process.exit(j.status==='healthy'?0:1); }); }).on('error', () => process.exit(1));"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: sup-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - sup-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+networks:
+  sup-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  media-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sup-media-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - NODE_ENV=development
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET=sup-media
+      - S3_REGION=us-east-1
+      - S3_FORCE_PATH_STYLE=true
+      - JWT_SECRET=your-secret-key-change-in-production
+      - MAX_FILE_SIZE=104857600
+      - MAX_THUMBNAIL_SIZE=2097152
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - PRESIGNED_URL_EXPIRY=3600
+    depends_on:
+      - minio
+    networks:
+      - sup-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  minio:
+    image: minio/minio:latest
+    container_name: sup-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - sup-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+networks:
+  sup-network:
+    driver: bridge
+
+volumes:
+  minio-data:
+    driver: local
